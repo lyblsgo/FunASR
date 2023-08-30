@@ -52,6 +52,7 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> wav_path("", WAV_PATH, "the input could be: wav_path, e.g.: asr_example.wav; pcm_path, e.g.: asr_example.pcm; wav.scp, kaldi style wav list (wav_id \t wav_path)", true, "", "string");
     TCLAP::ValueArg<std::string> hotword("", HOTWORD, "*.txt(one hotword perline) or hotwords seperate by space (could be: 阿里巴巴 达摩院)", false, "", "string");
+    TCLAP::ValueArg<std::int32_t> batch_size("", "batch-size", "batch_size for ASR model", false, 1, "int32_t");
 
     cmd.add(model_dir);
     cmd.add(quantize);
@@ -60,6 +61,7 @@ int main(int argc, char** argv)
     cmd.add(punc_dir);
     cmd.add(punc_quant);
     cmd.add(wav_path);
+    cmd.add(batch_size);
     cmd.add(hotword);
     cmd.parse(argc, argv);
 
@@ -137,12 +139,16 @@ int main(int argc, char** argv)
     
     float snippet_time = 0.0f;
     long taking_micros = 0;
-    std::vector<std::vector<float>> hotwords_embedding = CompileHotwordEmbedding(asr_hanlde, hotwords_);
-    for (int i = 0; i < wav_list.size(); i++) {
-        auto& wav_file = wav_list[i];
-        auto& wav_id = wav_ids[i];
+    int batch_size_ = batch_size.getValue();
+    int batch_input = 0;
+    
+    for(int index=0; index<wav_list.size();index=index+batch_size_){
+	    batch_input = (index+batch_size_>wav_list.size())?wav_list.size()-index:batch_size_;
+	    vector<string> sub_vector(wav_list.begin() + index, wav_list.begin() + index + batch_input);
+    
+    
         gettimeofday(&start, NULL);
-        FUNASR_RESULT result=FunOfflineInfer(asr_hanlde, wav_file.c_str(), RASR_NONE, NULL, hotwords_embedding, 16000);
+        FUNASR_RESULT result=FunOfflineBatchInfer(asr_hanlde, sub_vector, RASR_NONE, NULL, 16000);
         gettimeofday(&end, NULL);
         seconds = (end.tv_sec - start.tv_sec);
         taking_micros += ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
@@ -150,10 +156,10 @@ int main(int argc, char** argv)
         if (result)
         {
             string msg = FunASRGetResult(result, 0);
-            LOG(INFO)<< wav_id <<" : "<<msg;
+            LOG(INFO)<<"Result: "<<msg;
             string stamp = FunASRGetStamp(result);
             if(stamp !=""){
-                LOG(INFO)<< wav_id <<" : "<<stamp;
+                LOG(INFO) <<" : "<<stamp;
             }
             snippet_time += FunASRGetRetSnippetTime(result);
             FunASRFreeResult(result);

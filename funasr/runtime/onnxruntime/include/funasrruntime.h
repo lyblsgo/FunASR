@@ -100,6 +100,7 @@ _FUNASRAPI FUNASR_HANDLE  	FunOfflineInit(std::map<std::string, std::string>& mo
 // buffer
 _FUNASRAPI FUNASR_RESULT	FunOfflineInferBuffer(FUNASR_HANDLE handle, const char* sz_buf, int n_len, FUNASR_MODE mode, QM_CALLBACK fn_callback, const std::vector<std::vector<float>> &hw_emb, int sampling_rate=16000, std::string wav_format="pcm");
 // file, support wav & pcm
+_FUNASRAPI FUNASR_RESULT	FunOfflineBatchInfer(FUNASR_HANDLE handle, std::vector<std::string>& sub_vector, FUNASR_MODE mode, QM_CALLBACK fn_callback, int sampling_rate=16000);
 _FUNASRAPI FUNASR_RESULT	FunOfflineInfer(FUNASR_HANDLE handle, const char* sz_filename, FUNASR_MODE mode, QM_CALLBACK fn_callback, const std::vector<std::vector<float>> &hw_emb, int sampling_rate=16000);
 _FUNASRAPI const std::vector<std::vector<float>> CompileHotwordEmbedding(FUNASR_HANDLE handle, std::string &hotwords);
 _FUNASRAPI void				FunOfflineUninit(FUNASR_HANDLE handle);

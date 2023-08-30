@@ -36,7 +36,12 @@ OfflineStream::OfflineStream(std::map<std::string, std::string>& model_path, int
         string hw_compile_model_path;
         string seg_dict_path;
     
+        #ifdef USE_GPU
+        asr_handle = make_unique<ParaformerTorch>();
+        #else
         asr_handle = make_unique<Paraformer>();
+        #endif
+
         bool enable_hotword = false;
         hw_compile_model_path = PathAppend(model_path.at(MODEL_DIR), MODEL_EB_NAME);
         seg_dict_path = PathAppend(model_path.at(MODEL_DIR), MODEL_SEG_DICT);
@@ -56,6 +61,11 @@ OfflineStream::OfflineStream(std::map<std::string, std::string>& model_path, int
             am_model_path = PathAppend(model_path.at(MODEL_DIR), QUANT_MODEL_NAME);
           }
         }
+
+        #ifdef USE_GPU
+        am_model_path = PathAppend(model_path.at(MODEL_DIR), "model.blade.fp16.pt");
+        #endif
+
         am_cmvn_path = PathAppend(model_path.at(MODEL_DIR), AM_CMVN_NAME);
         am_config_path = PathAppend(model_path.at(MODEL_DIR), AM_CONFIG_NAME);
 

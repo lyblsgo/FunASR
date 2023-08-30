@@ -1,6 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_executable(funasr-onnx-offline "funasr-onnx-offline.cpp")
+target_link_options(funasr-onnx-offline PRIVATE "-Wl,--no-as-needed")
 target_link_libraries(funasr-onnx-offline PUBLIC funasr)
 
 add_executable(funasr-onnx-offline-vad "funasr-onnx-offline-vad.cpp")
@@ -19,6 +20,7 @@ add_executable(funasr-onnx-online-punc "funasr-onnx-online-punc.cpp")
 target_link_libraries(funasr-onnx-online-punc PUBLIC funasr)
 
 add_executable(funasr-onnx-offline-rtf "funasr-onnx-offline-rtf.cpp")
+target_link_options(funasr-onnx-offline-rtf PRIVATE "-Wl,--no-as-needed")
 target_link_libraries(funasr-onnx-offline-rtf PUBLIC funasr)
 
 add_executable(funasr-onnx-2pass "funasr-onnx-2pass.cpp")

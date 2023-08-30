@@ -29,18 +29,19 @@ std::atomic<int> wav_index(0);
 std::mutex mtx;
 
 void runReg(FUNASR_HANDLE asr_handle, vector<string> wav_list, vector<string> wav_ids,
-            float* total_length, long* total_time, int core_id, string hotwords) {
+            float* total_length, long* total_time, int core_id, string hotwords, int batch_size) {
     
     struct timeval start, end;
     long seconds = 0;
     float n_total_length = 0.0f;
     long n_total_time = 0;
     std::vector<std::vector<float>> hotwords_embedding = CompileHotwordEmbedding(asr_handle, hotwords);
-    
+    int batch_input = 0;
+    vector<string> sub_vector(wav_list.begin(), wav_list.begin() + 1);
     // warm up
     for (size_t i = 0; i < 1; i++)
     {
-        FUNASR_RESULT result=FunOfflineInfer(asr_handle, wav_list[0].c_str(), RASR_NONE, NULL, hotwords_embedding, 16000);
+        FUNASR_RESULT result=FunOfflineBatchInfer(asr_handle, sub_vector, RASR_NONE, NULL, 16000);
         if(result){
             FunASRFreeResult(result);
         }
@@ -48,13 +49,15 @@ void runReg(FUNASR_HANDLE asr_handle, vector<string> wav_list, vector<string> wa
 
     while (true) {
         // 使用原子变量获取索引并递增
-        int i = wav_index.fetch_add(1);
+        int i = wav_index.fetch_add(batch_size);
         if (i >= wav_list.size()) {
             break;
+        }else{
+            batch_input = (i+batch_size>wav_list.size())?wav_list.size()-i:batch_size;
         }
-
+        vector<string> sub_vector(wav_list.begin() + i, wav_list.begin() + i + batch_input);
         gettimeofday(&start, NULL);
-        FUNASR_RESULT result=FunOfflineInfer(asr_handle, wav_list[i].c_str(), RASR_NONE, NULL, hotwords_embedding, 16000);
+        FUNASR_RESULT result=FunOfflineBatchInfer(asr_handle, sub_vector, RASR_NONE, NULL, 16000);
 
         gettimeofday(&end, NULL);
         seconds = (end.tv_sec - start.tv_sec);
@@ -63,16 +66,16 @@ void runReg(FUNASR_HANDLE asr_handle, vector<string> wav_list, vector<string> wa
 
         if(result){
             string msg = FunASRGetResult(result, 0);
-            LOG(INFO) << "Thread: " << this_thread::get_id() << "," << wav_ids[i] << " : " << msg;
+            LOG(INFO) << "Thread: " << this_thread::get_id() <<" Result: " << msg.c_str();
             string stamp = FunASRGetStamp(result);
             if(stamp !=""){
-                LOG(INFO) << "Thread: " << this_thread::get_id() << "," << wav_ids[i] << " : " << stamp;
+                // LOG(INFO) << "Thread: " << this_thread::get_id() << "," << wav_ids[i] << " : " << stamp;
             }
             float snippet_time = FunASRGetRetSnippetTime(result);
             n_total_length += snippet_time;
             FunASRFreeResult(result);
         }else{
-            LOG(ERROR) << wav_ids[i] << (": No return data!\n");
+            LOG(ERROR) << ("No return data!\n");
         }
     }
     {
@@ -117,6 +120,7 @@ int main(int argc, char *argv[])
     TCLAP::ValueArg<std::string> wav_path("", WAV_PATH, "the input could be: wav_path, e.g.: asr_example.wav; pcm_path, e.g.: asr_example.pcm; wav.scp, kaldi style wav list (wav_id \t wav_path)", true, "", "string");
     TCLAP::ValueArg<std::int32_t> thread_num("", THREAD_NUM, "multi-thread num for rtf", true, 0, "int32_t");
     TCLAP::ValueArg<std::string> hotword("", HOTWORD, "*.txt(one hotword perline) or hotwords seperate by | (could be: 阿里巴巴 达摩院)", false, "", "string");
+    TCLAP::ValueArg<std::int32_t> batch_size("", "batch-size", "batch_size for ASR model", false, 1, "int32_t");
 
     cmd.add(model_dir);
     cmd.add(quantize);
@@ -126,6 +130,7 @@ int main(int argc, char *argv[])
     cmd.add(punc_quant);
     cmd.add(wav_path);
     cmd.add(thread_num);
+    cmd.add(batch_size);
     cmd.add(hotword);
     cmd.parse(argc, argv);
 
@@ -209,9 +214,10 @@ int main(int argc, char *argv[])
     std::vector<std::thread> threads;
 
     int rtf_threds = thread_num.getValue();
+    int batch_size_ = batch_size.getValue();
     for (int i = 0; i < rtf_threds; i++)
     {
-        threads.emplace_back(thread(runReg, asr_handle, wav_list, wav_ids, &total_length, &total_time, i, hotwords_));
+        threads.emplace_back(thread(runReg, asr_handle, wav_list, wav_ids, &total_length, &total_time, i, hotwords_, batch_size_));
     }
 
     for (auto& thread : threads)

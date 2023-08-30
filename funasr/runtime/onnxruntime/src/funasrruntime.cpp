@@ -347,6 +347,48 @@ extern "C" {
 	
 		return p_result;
 	}
+	
+    _FUNASRAPI FUNASR_RESULT FunOfflineBatchInfer(FUNASR_HANDLE handle, vector<string>& sub_vector, FUNASR_MODE mode, QM_CALLBACK fn_callback, int sampling_rate)
+	{
+		funasr::OfflineStream* offline_stream = (funasr::OfflineStream*)handle;
+		if (!offline_stream)
+			return nullptr;
+
+		float* buff[sub_vector.size()];
+		int len[sub_vector.size()];
+		int flag[sub_vector.size()];
+		int index = 0;
+		funasr::FUNASR_RECOG_RESULT* p_result = new funasr::FUNASR_RECOG_RESULT;
+		p_result->snippet_time = 0;
+		
+		for(auto& sz_filename:sub_vector){
+			funasr::Audio audio(1);
+			if(funasr::is_target_file(sz_filename, "wav")){
+				int32_t sampling_rate_ = -1;
+				if(!audio.LoadWav(sz_filename.c_str(), &sampling_rate_))
+					return nullptr;
+			}else if(funasr::is_target_file(sz_filename, "pcm")){
+				if (!audio.LoadPcmwav(sz_filename.c_str(), &sampling_rate))
+					return nullptr;
+			}else{
+				LOG(ERROR)<<"Wrong wav extension";
+				exit(-1);
+			}
+			audio.Fetch(buff[index], len[index], flag[index]);
+			p_result->snippet_time += audio.GetTimeLen();
+			index++;
+		}
+		vector<string> msgs = (offline_stream->asr_handle)->Forward(buff, len, flag, sub_vector.size());
+		for(auto& msg: msgs){
+			p_result->msg+= msg + "\n";
+		}
+	
+        	for(int i=0; i<sub_vector.size(); i++){
+        	    free(buff[i]);
+        	}
+        	return p_result;
+	}
+
 
 	_FUNASRAPI const std::vector<std::vector<float>> CompileHotwordEmbedding(FUNASR_HANDLE handle, std::string &hotwords) {
 		funasr::OfflineStream* offline_stream = (funasr::OfflineStream*)handle;

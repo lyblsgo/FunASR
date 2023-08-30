@@ -48,6 +48,7 @@ using namespace std;
 #include "resample.h"
 #include "paraformer.h"
 #include "paraformer-online.h"
+#include "paraformer-torch.h"
 #include "offline-stream.h"
 #include "tpass-stream.h"
 #include "tpass-online-stream.h"
