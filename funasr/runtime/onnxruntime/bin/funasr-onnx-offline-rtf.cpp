@@ -35,7 +35,6 @@ void runReg(FUNASR_HANDLE asr_handle, vector<string> wav_list, vector<string> wa
     long seconds = 0;
     float n_total_length = 0.0f;
     long n_total_time = 0;
-    std::vector<std::vector<float>> hotwords_embedding = CompileHotwordEmbedding(asr_handle, hotwords);
     int batch_input = 0;
     vector<string> sub_vector(wav_list.begin(), wav_list.begin() + 1);
     // warm up
