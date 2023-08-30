@@ -361,9 +361,8 @@ extern "C" {
 		funasr::FUNASR_RECOG_RESULT* p_result = new funasr::FUNASR_RECOG_RESULT;
 		p_result->snippet_time = 0;
 		
-		std::vector<funasr::Audio> audio_vecs;
+		std::vector<funasr::Audio> audio_vecs(sub_vector.size());
 		for (int i = 0; i < sub_vector.size(); i++) {
-			audio_vecs.emplace_back(funasr::Audio(1));
 			string sz_filename = sub_vector[i];
 
 			if(funasr::is_target_file(sz_filename, "wav")){

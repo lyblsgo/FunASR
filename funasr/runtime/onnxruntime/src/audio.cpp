@@ -181,10 +181,19 @@ int AudioFrame::Disp()
     return 0;
 }
 
+Audio::Audio() : data_type(1)
+{
+    speech_buff = NULL;
+    speech_data = NULL;
+    speech_char = NULL;
+    align_size = 1360;
+}
+
 Audio::Audio(int data_type) : data_type(data_type)
 {
     speech_buff = NULL;
     speech_data = NULL;
+    speech_char = NULL;
     align_size = 1360;
 }
 
@@ -192,6 +201,7 @@ Audio::Audio(int data_type, int size) : data_type(data_type)
 {
     speech_buff = NULL;
     speech_data = NULL;
+    speech_char = NULL;
     align_size = (float)size;
 }
 

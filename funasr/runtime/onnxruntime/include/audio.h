@@ -40,9 +40,9 @@ class AudioFrame {
 
 class Audio {
   private:
-    float *speech_data=nullptr;
-    int16_t *speech_buff=nullptr;
-    char* speech_char=nullptr;
+    float *speech_data=NULL;
+    int16_t *speech_buff=NULL;
+    char* speech_char=NULL;
     int speech_len;
     int speech_align_len;
     float align_size;
@@ -52,6 +52,7 @@ class Audio {
     queue<AudioFrame *> asr_offline_queue;
 
   public:
+    Audio();
     Audio(int data_type);
     Audio(int data_type, int size);
     ~Audio();
