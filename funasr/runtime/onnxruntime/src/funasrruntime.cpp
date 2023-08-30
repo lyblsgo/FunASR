@@ -361,21 +361,24 @@ extern "C" {
 		funasr::FUNASR_RECOG_RESULT* p_result = new funasr::FUNASR_RECOG_RESULT;
 		p_result->snippet_time = 0;
 		
-		for(auto& sz_filename:sub_vector){
-			funasr::Audio audio(1);
+		std::vector<funasr::Audio> audio_vecs;
+		for (int i = 0; i < sub_vector.size(); i++) {
+			audio_vecs.emplace_back(funasr::Audio(1));
+			string sz_filename = sub_vector[i];
+
 			if(funasr::is_target_file(sz_filename, "wav")){
 				int32_t sampling_rate_ = -1;
-				if(!audio.LoadWav(sz_filename.c_str(), &sampling_rate_))
+				if(!audio_vecs[i].LoadWav(sz_filename.c_str(), &sampling_rate_))
 					return nullptr;
 			}else if(funasr::is_target_file(sz_filename, "pcm")){
-				if (!audio.LoadPcmwav(sz_filename.c_str(), &sampling_rate))
+				if (!audio_vecs[i].LoadPcmwav(sz_filename.c_str(), &sampling_rate))
 					return nullptr;
 			}else{
 				LOG(ERROR)<<"Wrong wav extension";
 				exit(-1);
 			}
-			audio.Fetch(buff[index], len[index], flag[index]);
-			p_result->snippet_time += audio.GetTimeLen();
+			audio_vecs[i].Fetch(buff[index], len[index], flag[index]);
+			p_result->snippet_time += audio_vecs[i].GetTimeLen();
 			index++;
 		}
 		vector<string> msgs = (offline_stream->asr_handle)->Forward(buff, len, flag, sub_vector.size());
@@ -383,10 +386,7 @@ extern "C" {
 			p_result->msg+= msg + "\n";
 		}
 	
-        	for(int i=0; i<sub_vector.size(); i++){
-        	    free(buff[i]);
-        	}
-        	return p_result;
+		return p_result;
 	}
 
 
