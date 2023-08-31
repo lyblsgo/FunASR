@@ -34,12 +34,10 @@ endif()
 #libtorch
 if(GPU)
     add_definitions(-DUSE_GPU)
-    set(TORCH_DIR "/usr/local/lib/python3.8/dist-packages/torch")
-    set(TORCH_BLADE_DIR "/usr/local/lib/python3.8/dist-packages/torch_blade")
+    set(TORCH_DIR "/opt/conda/lib/python3.7/site-packages/torch")
     include_directories(${TORCH_DIR}/include)
     include_directories(${TORCH_DIR}/include/torch/csrc/api/include)
     link_directories(${TORCH_DIR}/lib)
-    link_directories(${TORCH_BLADE_DIR})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -D_GLIBCXX_USE_CXX11_ABI=0")
 endif()
 

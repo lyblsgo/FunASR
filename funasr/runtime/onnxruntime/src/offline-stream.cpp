@@ -63,7 +63,7 @@ OfflineStream::OfflineStream(std::map<std::string, std::string>& model_path, int
         }
 
         #ifdef USE_GPU
-        am_model_path = PathAppend(model_path.at(MODEL_DIR), "model.blade.fp16.pt");
+        am_model_path = PathAppend(model_path.at(MODEL_DIR), "model.gpu.torchscripts");
         #endif
 
         am_cmvn_path = PathAppend(model_path.at(MODEL_DIR), AM_CMVN_NAME);
