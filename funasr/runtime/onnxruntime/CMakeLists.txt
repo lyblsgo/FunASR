@@ -47,6 +47,7 @@ include_directories(${PROJECT_SOURCE_DIR}/third_party/yaml-cpp/include)
 if(ENABLE_GLOG)
     include_directories(${PROJECT_SOURCE_DIR}/third_party/glog)
     set(BUILD_TESTING OFF)
+    set(WITH_GFLAGS OFF)
     add_subdirectory(third_party/glog)
 endif()
 
